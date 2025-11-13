@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Route Finder</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    html, body, #map { height: 100%; margin: 0; padding: 0; }
+    .info {
+      position: absolute;
+      top: 10px; left: 10px;
+      background: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      font-family: sans-serif;
+      z-index: 1000;
+    }
+    select {
+      margin-top: 6px;
+      width: 100%;
+      padding: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="info">
+    <b>Algorithm:</b><br>
+    <select id="algo">
+      <option value="dijkstra" selected>Dijkstra</option>
+      <option value="bfs">BFS</option>
+      <option value="dfs">DFS</option>
+    </select>
+    <hr>
+    <div id="status">Click two points to find route</div>
+  </div>
+  <div id="map"></div>
+
+  <script>
+    const map = L.map('map').setView([47.918, 106.917], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    let points = [];
+    let markers = [];
+    let routeLayer = null;
+
+    map.on('click', e => {
+      if (markers.length >= 2) {
+        markers.forEach(m => map.removeLayer(m));
+        if (routeLayer) map.removeLayer(routeLayer);
+        markers = [];
+        points = [];
+      }
+
+      const marker = L.marker(e.latlng).addTo(map);
+      markers.push(marker);
+      points.push([e.latlng.lng, e.latlng.lat]); // lon, lat order for GeoTools
+
+      if (points.length === 2) {
+        const [start, end] = points;
+        const algo = document.getElementById("algo").value;
+        findRoute(start, end, algo);
+      }
+    });
+
+    function findRoute(start, end, algo) {
+      document.getElementById("status").innerHTML = "Calculating route using " + algo + "...";
+
+      const url = `/route?start=${start[0]},${start[1]}&end=${end[0]},${end[1]}&algo=${algo}`;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            alert("Error: " + data.error);
+            return;
+          }
+
+          const coords = data.path.map(p => {
+            const [x, y] = p.split(',').map(Number);
+            return [y, x];
+          });
+
+          routeLayer = L.polyline(coords, { color: 'red', weight: 3 }).addTo(map);
+          map.fitBounds(routeLayer.getBounds());
+
+          document.getElementById("status").innerHTML = `
+            <b>${algo.toUpperCase()}</b> completed<br>
+            Path length: ${data.path_length}<br>
+            Runtime: ${data.runtime_seconds.toFixed(4)}s
+          `;
+        })
+        .catch(err => {
+          alert("Request failed: " + err);
+          document.getElementById("status").innerHTML = "Error calculating route";
+        });
+    }
+  </script>
+</body>
+</html>
