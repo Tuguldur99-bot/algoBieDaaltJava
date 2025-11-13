@@ -18,13 +18,13 @@ public class GraphBuilder {
     public static Map<Coordinate, List<Edge>> buildGraph(String shpPath) throws Exception {
         Map<Coordinate, List<Edge>> graph = new HashMap<>();
 
-        // Force shapefile path
+
         File file = new File("src/main/resources/roadShapeFiles/gis_osm_roads_free_1.shp");
         if (!file.exists()) {
             throw new Exception("Shapefile not found: " + file.getAbsolutePath());
         }
 
-        System.out.println("📂 Loading shapefile: " + file.getAbsolutePath());
+        System.out.println(" Loading shapefile: " + file.getAbsolutePath());
 
         Map<String, Serializable> params = new HashMap<>();
         params.put("url", file.toURI().toURL());
@@ -84,8 +84,8 @@ public class GraphBuilder {
             store.dispose();
         }
 
-        System.out.println("✅ Loaded " + featureCount + " road features.");
-        System.out.println("✅ Built graph with " + graph.size() + " unique nodes and " + edgeCount + " edges.");
+        System.out.println(" Loaded " + featureCount + " road features.");
+        System.out.println(" Built graph with " + graph.size() + " unique nodes and " + edgeCount + " edges.");
         return graph;
     }
 

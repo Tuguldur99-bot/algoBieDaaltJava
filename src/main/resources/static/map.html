@@ -58,7 +58,7 @@
 
       const marker = L.marker(e.latlng).addTo(map);
       markers.push(marker);
-      points.push([e.latlng.lng, e.latlng.lat]); // lon, lat order for GeoTools
+      points.push([e.latlng.lng, e.latlng.lat]); 
 
       if (points.length === 2) {
         const [start, end] = points;
